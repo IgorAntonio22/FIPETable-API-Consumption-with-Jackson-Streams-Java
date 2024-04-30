@@ -2,9 +2,7 @@ package br.com.alura.igorantonio.desafioaluraspring.principal;
 
 import br.com.alura.igorantonio.desafioaluraspring.chamadaAPI.ChamarAPI;
 import br.com.alura.igorantonio.desafioaluraspring.chamadaAPI.ConverterDados;
-import br.com.alura.igorantonio.desafioaluraspring.model.Modelo;
-import br.com.alura.igorantonio.desafioaluraspring.model.ResponseModelos;
-import br.com.alura.igorantonio.desafioaluraspring.model.Marca;
+import br.com.alura.igorantonio.desafioaluraspring.model.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -66,10 +64,40 @@ public class Principal {
 
         System.out.println("Digite um trecho do nome do veículo para consultar: ");
 
-        String trechoDoModeloDigitado = scanner.nextLine();
+        var trechoDoModeloDigitado = scanner.nextLine();
 
+        trechoDoModeloDigitado.toLowerCase();
+        //entrySet() transforma o mapa em um Set, serve para iterarmos ou fazermos um stream()
+        Map<Integer, String> mapaFiltrado = mapaModelos.entrySet().stream()
+                .filter(e -> e.getValue().toLowerCase().contains(trechoDoModeloDigitado))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
+        // Imprimindo o mapa filtrado
+        for(Map.Entry<Integer, String> entry : mapaFiltrado.entrySet()) {
+            Integer codigo = entry.getKey();
+            String nome = entry.getValue();
+            System.out.println("Código: " + codigo + ", Modelo: " + nome);
+        }
 
+        System.out.println("Digite o código do modelo para consulta de valores: ");
+        var codigoDoVeiculo = scanner.nextLine();
 
+        var json3 = consumoApi.obterDadosApi(URI + nomeDoVeiculo.toLowerCase() +"/marcas/"
+                + codigoDaMarca + "/modelos/" + codigoDoVeiculo + "/anos");
+        List<Ano> anos = conversor.converteDadosArrayDeObjetos(json3, Ano[].class);
+        System.out.println(anos);
+
+        List<Valor> listaDeValores = new ArrayList<Valor>();
+
+        for(Ano ano: anos) {
+            var json4 = consumoApi.obterDadosApi(URI + nomeDoVeiculo.toLowerCase() +"/marcas/"
+                    + codigoDaMarca + "/modelos/" + codigoDoVeiculo + "/anos/" + ano.codigo());
+            Valor valoresVeiculosPorAno = conversor.obterDados(json4, Valor.class);
+            listaDeValores.add(valoresVeiculosPorAno);
+        }
+
+        for(Valor valor : listaDeValores) {
+            System.out.println(valor);
+        }
     }
 }
